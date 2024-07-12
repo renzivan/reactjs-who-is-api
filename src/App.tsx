@@ -8,12 +8,13 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  TextField,
-  Tooltip,
+  TextField
 } from "@mui/material";
 
 import { SelectChangeEvent } from '@mui/material/Select';
 import SearchIcon from '@mui/icons-material/Search';
+import DomainTable from "./components/DomainTable";
+import ContactTable from "./components/ContactTable";
 
 interface WhoisRecord {
   domainName: string;
@@ -35,6 +36,7 @@ function App() {
   const [info, setInfo] = useState<string>("domain");
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  // on submit form
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
@@ -48,33 +50,25 @@ function App() {
       );
       const data = await response.json();
 
-      if (data.ErrorMessage) {
-        setError(data.ErrorMessage.msg);
+      if (data.ErrorMessage || data.WhoisRecord?.dataError) { // catch error from api data
+        setError(data.ErrorMessage?.msg || data.WhoisRecord?.dataError);
         setOutput(null);
         setIsLoading(false);
-      } else {
+      } else { // set data to state and clear error
         setOutput(data.WhoisRecord);
         setError("");
         setIsLoading(false);
       }
     } catch (err: any) {
+      // catch error from api call
       setError("Error: " + err.message);
       setIsLoading(false);
     }
   };
 
+  // on select information type
   const handleSelect = (e: SelectChangeEvent<string>) => {
     setInfo(e.target.value);
-  };
-
-  const formatDate = (val: string): string => {
-    const date = new Date(val);
-    const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    };
-    return new Intl.DateTimeFormat('en-US', options).format(date);
   };
 
   return (
@@ -115,90 +109,25 @@ function App() {
         </div>
       </div>
 
-      {isLoading && <Alert severity="warning">Fetching Data...</Alert>}
-      {error && <Alert severity="error" variant="filled">{error}.</Alert>}
-
       {output && (
-        <div className="mt-5 p-5 bg-white/[0.4] rounded-lg shadow-md max-w-[1200px]">
+        <div className="my-5 p-5 bg-white/[0.4] rounded-lg shadow-md max-w-[1200px]">
           <div className="text-2xl text-neutral-700 mb-5 capitalize">{info} Information</div>
 
           {info === "domain" ? (
             <>
-              <div className="flex flex-wrap justify-between gap-8">
-                <Tooltip title={output.domainName}>
-                  <div>
-                    <div className="font-bold text-neutral-700">Domain Name</div>
-                    <div>{output.domainName}</div>
-                  </div>
-                </Tooltip>
-                <Tooltip title={output.registrarName}>
-                  <div>
-                    <div className="font-bold text-neutral-700">Registrar</div>
-                    <div>{output.registrarName}</div>
-                  </div>
-                </Tooltip>
-                <Tooltip title={formatDate(output.createdDate)}>
-                  <div>
-                    <div className="font-bold text-neutral-700">Registration Date</div>
-                    <div>{formatDate(output.createdDate)}</div>
-                  </div>
-                </Tooltip>
-                <Tooltip title={formatDate(output.expiresDate)}>
-                  <div>
-                    <div className="font-bold text-neutral-700">Expiration Date</div>
-                    <div>{formatDate(output.expiresDate)}</div>
-                  </div>
-                </Tooltip>
-                <Tooltip title={output.estimatedDomainAge}>
-                  <div>
-                    <div className="font-bold text-neutral-700">Estimated Domain Age</div>
-                    <div>{output.estimatedDomainAge} day(s)</div>
-                  </div>
-                </Tooltip>
-                <div className="w-48">
-                  <Tooltip title={output.nameServers?.hostNames.join(", ")}>
-                    <div>
-                      <div className="font-bold text-neutral-700">Hostnames</div>
-                      <div className="truncate text-ellipsis overflow-hidden">
-                        {output.nameServers?.hostNames.join(", ")}
-                      </div>
-                    </div>
-                  </Tooltip>
-                </div>
-              </div>
+              <DomainTable output={output} />
             </>
           ) : (
             <>
-              <div className="flex flex-wrap justify-between gap-8">
-                <Tooltip title={output.registrant?.name || "N/A"}>
-                  <div>
-                    <div className="font-bold text-neutral-700">Registrant Name</div>
-                    <div>{output.registrant?.name || "N/A"}</div>
-                  </div>
-                </Tooltip>
-                <Tooltip title={output.technicalContact?.name || "N/A"}>
-                  <div>
-                    <div className="font-bold text-neutral-700">Technical Contact Name</div>
-                    <div>{output.technicalContact?.name || "N/A"}</div>
-                  </div>
-                </Tooltip>
-                <Tooltip title={output.administrativeContact?.name || "N/A"}>
-                  <div>
-                    <div className="font-bold text-neutral-700">Administrative Contact Name</div>
-                    <div>{output.administrativeContact?.name || "N/A"}</div>
-                  </div>
-                </Tooltip>
-                <Tooltip title={output.contactEmail || "N/A"}>
-                  <div>
-                    <div className="font-bold text-neutral-700">Contact Email</div>
-                    <div>{output.contactEmail || "N/A"}</div>
-                  </div>
-                </Tooltip>
-              </div>
+              <ContactTable output={output} />
             </>
           )}
         </div>
       )}
+
+      
+      {isLoading && <Alert severity="warning">Fetching Data...</Alert>}
+      {error && <Alert severity="error" variant="filled">{error}.</Alert>}
     </div>
   );
 }

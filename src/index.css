@@ -4,4 +4,6 @@
 
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  height: 100vh;
+  background: linear-gradient(45deg, rgba(128,155,206,1) 0%, rgba(184,224,212,1) 50%, rgba(234,196,213,1) 100%);
 }
